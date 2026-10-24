@@ -1,0 +1,124 @@
+.forgot-page {
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  background: #101820;
+  color: #fff;
+  font-family: inherit;
+}
+
+.forgot-card {
+  width: 100%;
+  max-width: 440px;
+  padding: 36px;
+  background: #18232d;
+  border: 1px solid #303b44;
+  border-radius: 12px;
+}
+
+.forgot-brand {
+  color: #fff;
+  font-size: 29px;
+  font-weight: 900;
+  text-decoration: none;
+  letter-spacing: -1px;
+}
+
+.forgot-brand span {
+  color: #b8f56a;
+}
+
+.forgot-label {
+  margin-top: 35px;
+  color: #b8f56a;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.forgot-card h1 {
+  margin: 10px 0;
+  font-size: clamp(27px, 5vw, 35px);
+}
+
+.forgot-description {
+  margin-bottom: 28px;
+  color: #aab4bd;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.forgot-card label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.forgot-card input {
+  width: 100%;
+  padding: 14px;
+  background: #101820;
+  border: 1px solid #394550;
+  border-radius: 6px;
+  color: #fff;
+  font: inherit;
+  outline: none;
+}
+
+.forgot-card input:focus {
+  border-color: #b8f56a;
+}
+
+.forgot-card button {
+  width: 100%;
+  margin-top: 22px;
+  padding: 15px;
+  background: #b8f56a;
+  color: #101820;
+  border: none;
+  border-radius: 6px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.forgot-card button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.forgot-success,
+.forgot-error {
+  margin-top: 15px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.forgot-success {
+  color: #b8f56a;
+}
+
+.forgot-error {
+  color: #ff8888;
+}
+
+.forgot-back {
+  display: block;
+  margin-top: 24px;
+  color: #aab4bd;
+  text-align: center;
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.forgot-back:hover {
+  color: #b8f56a;
+}
+
+@media (max-width: 480px) {
+  .forgot-card {
+    padding: 25px 20px;
+  }
+}

@@ -8,7 +8,6 @@ body
   padding: 70px 6% 100px;
   background: #101820;
   color: #ffffff;
-  font-family: "Gill Sans", sans-serif;
 }
 
 .dr-news-heading {
@@ -96,7 +95,7 @@ body
 .dr-news-image-placeholder {
   display: block;
   width: 100%;
-  height: 220px;
+  height: 300px;
   object-fit: cover;
 }
 

@@ -1,0 +1,124 @@
+.reset-page {
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  background: #101820;
+  color: #fff;
+  font-family: inherit;
+}
+
+.reset-card {
+  width: 100%;
+  max-width: 440px;
+  padding: 36px;
+  background: #18232d;
+  border: 1px solid #303b44;
+  border-radius: 12px;
+}
+
+.reset-brand {
+  color: #fff;
+  font-size: 29px;
+  font-weight: 900;
+  text-decoration: none;
+  letter-spacing: -1px;
+}
+
+.reset-brand span {
+  color: #b8f56a;
+}
+
+.reset-label {
+  margin-top: 35px;
+  color: #b8f56a;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.reset-card h1 {
+  margin: 10px 0;
+  font-size: clamp(27px, 5vw, 35px);
+}
+
+.reset-description {
+  margin-bottom: 28px;
+  color: #aab4bd;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.reset-card label {
+  display: block;
+  margin: 18px 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.reset-card input {
+  width: 100%;
+  padding: 14px;
+  background: #101820;
+  border: 1px solid #394550;
+  border-radius: 6px;
+  color: #fff;
+  font: inherit;
+  outline: none;
+}
+
+.reset-card input:focus {
+  border-color: #b8f56a;
+}
+
+.reset-card button {
+  width: 100%;
+  margin-top: 25px;
+  padding: 15px;
+  background: #b8f56a;
+  color: #101820;
+  border: none;
+  border-radius: 6px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.reset-card button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.reset-error,
+.reset-success {
+  margin-top: 15px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.reset-error {
+  color: #ff8888;
+}
+
+.reset-success {
+  color: #b8f56a;
+}
+
+.reset-back {
+  display: block;
+  margin-top: 24px;
+  color: #aab4bd;
+  text-align: center;
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.reset-back:hover {
+  color: #b8f56a;
+}
+
+@media (max-width: 480px) {
+  .reset-card {
+    padding: 25px 20px;
+  }
+}
