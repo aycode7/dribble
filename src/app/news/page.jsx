@@ -86,7 +86,7 @@ const page = () => {
             {filteredArticles.map((article) => (
               <Link
                 href={`/news/${article.slug}`}
-                className="dr-news-card"
+                className="dr-news-cards"
                 key={article.id}
               >
                 {article.image_url ? (
@@ -100,7 +100,7 @@ const page = () => {
                   </div>
                 )}
 
-                <div className="dr-news-card-body">
+                <div className="dr-news-cards-body">
                   <p className="dr-news-category">
                     {article.league || article.category}
                   </p>
