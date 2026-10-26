@@ -5,36 +5,111 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import "./page.css";
 
-const sampleStandings = [
-  { pos: 1, club: "Arsenal", code: "ARS", p: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, pts: 0 },
-  { pos: 2, club: "Manchester City", code: "MCI", p: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, pts: 0 },
-  { pos: 3, club: "Liverpool", code: "LIV", p: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, pts: 0 },
-  { pos: 4, club: "Chelsea", code: "CHE", p: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, pts: 0 },
-  { pos: 5, club: "Aston Villa", code: "AVL", p: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, pts: 0 },
-  { pos: 6, club: "Tottenham", code: "TOT", p: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, pts: 0 },
-  { pos: 7, club: "Manchester United", code: "MUN", p: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, pts: 0 },
-  { pos: 8, club: "Newcastle United", code: "NEW", p: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, pts: 0 },
-];
-
-const sampleScorers = [
-  { name: "Erling Haaland", club: "Manchester City", goals: "—" },
-  { name: "Mohamed Salah", club: "Liverpool", goals: "—" },
-  { name: "Bukayo Saka", club: "Arsenal", goals: "—" },
-  { name: "Cole Palmer", club: "Chelsea", goals: "—" },
-  { name: "Alexander Isak", club: "Newcastle United", goals: "—" },
-];
-
-export default function PremierLeaguePage() {
+const PremierLeaguePage = () => {
   const [articles, setArticles] = useState([]);
   const [newsLoading, setNewsLoading] = useState(true);
   const [newsError, setNewsError] = useState(false);
 
+  const [standings, setStandings] = useState([]);
+  const [matches, setMatches] = useState([]);
+  const [footballLoading, setFootballLoading] = useState(true);
+  const [footballError, setFootballError] = useState("");
+  const [matchesError, setMatchesError] = useState("");
+
   useEffect(() => {
+    let cancelled = false;
+
+    async function getFootballData(view) {
+      const response = await fetch(
+        `/api/football?league=premier-league&view=${view}`
+      );
+
+      const responseText = await response.text();
+
+      if (!responseText.trim()) {
+        throw new Error(`Empty API response (HTTP ${response.status}).`);
+      }
+
+      let data;
+
+      try {
+        data = JSON.parse(responseText);
+      } catch {
+        throw new Error("The football API returned invalid JSON.");
+      }
+
+      if (!response.ok) {
+        throw new Error(data.error || "Unable to load football data.");
+      }
+
+      return data;
+    }
+
+    async function fetchFootballData() {
+      try {
+        const results = await Promise.allSettled([
+          getFootballData("standings"),
+          getFootballData("matches"),
+        ]);
+
+        if (cancelled) return;
+
+        const [standingsResult, matchesResult] = results;
+
+        if (standingsResult.status === "fulfilled") {
+          setStandings(
+            Array.isArray(standingsResult.value.standings)
+              ? standingsResult.value.standings
+              : []
+          );
+          setFootballError("");
+        } else {
+          console.error(
+            "Error loading Premier League standings:",
+            standingsResult.reason
+          );
+          setFootballError(
+            standingsResult.reason?.message ||
+              "Unable to load league standings."
+          );
+        }
+
+        if (matchesResult.status === "fulfilled") {
+          setMatches(
+            Array.isArray(matchesResult.value.matches)
+              ? matchesResult.value.matches
+              : []
+          );
+          setMatchesError("");
+        } else {
+          console.error(
+            "Error loading Premier League matches:",
+            matchesResult.reason
+          );
+          setMatchesError(
+            matchesResult.reason?.message ||
+              "Unable to load fixtures and results."
+          );
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.error("Error loading football data:", error);
+          setFootballError(
+            error.message || "Football data is unavailable."
+          );
+        }
+      } finally {
+        if (!cancelled) setFootballLoading(false);
+      }
+    }
+
     async function fetchNews() {
       try {
         const { data, error } = await supabase
           .from("articles")
-          .select("id, title, slug, excerpt, image_url, category, league, published_at")
+          .select(
+            "id, title, slug, excerpt, image_url, category, league, published_at"
+          )
           .eq("status", "published")
           .eq("league", "Premier League")
           .order("published_at", { ascending: false })
@@ -42,16 +117,21 @@ export default function PremierLeaguePage() {
 
         if (error) throw error;
 
-        setArticles(data || []);
+        if (!cancelled) setArticles(data || []);
       } catch (error) {
         console.error("Error loading Premier League news:", error);
-        setNewsError(true);
+        if (!cancelled) setNewsError(true);
       } finally {
-        setNewsLoading(false);
+        if (!cancelled) setNewsLoading(false);
       }
     }
 
+    fetchFootballData();
     fetchNews();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const formatDate = (date) => {
@@ -62,6 +142,91 @@ export default function PremierLeaguePage() {
       month: "short",
       year: "numeric",
     });
+  };
+
+  const formatMatchDate = (date) => {
+    if (!date) return "Date TBC";
+
+    return new Date(date).toLocaleString("en-GB", {
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const finishedMatches = matches
+    .filter((match) => match.status === "FINISHED")
+    .sort(
+      (a, b) =>
+        new Date(b.utcDate).getTime() - new Date(a.utcDate).getTime()
+    )
+    .slice(0, 5);
+
+  const upcomingMatches = matches
+    .filter((match) =>
+      ["SCHEDULED", "TIMED"].includes(match.status)
+    )
+    .sort(
+      (a, b) =>
+        new Date(a.utcDate).getTime() - new Date(b.utcDate).getTime()
+    )
+    .slice(0, 5);
+
+  const renderMatch = (match, index, isFinished) => {
+    const homeScore = match.score?.fullTime?.home;
+    const awayScore = match.score?.fullTime?.away;
+
+    return (
+      <div className="pl-scorer pl-match-row" key={match.id}>
+        <span className="pl-scorer-rank">
+          {String(index + 1).padStart(2, "0")}
+        </span>
+
+        <div className="pl-match-date">
+          <span>{formatMatchDate(match.utcDate)}</span>
+          <small>
+            {match.matchday ? `MATCHDAY ${match.matchday}` : "PREMIER LEAGUE"}
+          </small>
+        </div>
+
+        <div className="pl-match-teams">
+          <div className="pl-match-team">
+            {match.homeTeam?.crest ? (
+              <img
+                src={match.homeTeam.crest}
+                alt=""
+                loading="lazy"
+              />
+            ) : null}
+            <span>{match.homeTeam?.shortName || match.homeTeam?.name || "Home"}</span>
+          </div>
+
+          <div className="pl-match-team">
+            {match.awayTeam?.crest ? (
+              <img
+                src={match.awayTeam.crest}
+                alt=""
+                loading="lazy"
+              />
+            ) : null}
+            <span>{match.awayTeam?.shortName || match.awayTeam?.name || "Away"}</span>
+          </div>
+        </div>
+
+        <div className="pl-match-score">
+          {isFinished ? (
+            <>
+              <span>{homeScore ?? "—"}</span>
+              <span className="pl-match-score-divider">:</span>
+              <span>{awayScore ?? "—"}</span>
+            </>
+          ) : (
+            <span className="pl-match-vs">VS</span>
+          )}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -102,15 +267,23 @@ export default function PremierLeaguePage() {
         <div className="pl-section-heading">
           <div>
             <p className="pl-eyebrow">THE TABLE</p>
-            <h2>LEAGUE <span>STANDINGS</span></h2>
+            <h2>
+              LEAGUE <span>STANDINGS</span>
+            </h2>
           </div>
 
-          <span className="pl-demo-label">DEMO DATA</span>
+          <span className="pl-demo-label">
+            {footballLoading
+              ? "LOADING"
+              : footballError
+                ? "UNAVAILABLE"
+                : standings.length
+                  ? "LIVE DATA"
+                  : "NO DATA"}
+          </span>
         </div>
 
-        <p className="pl-notice">
-          Standings will update when we connect the football data API.
-        </p>
+        {footballError && <p className="pl-notice">{footballError}</p>}
 
         <div className="pl-table-wrap">
           <table className="pl-table">
@@ -130,63 +303,125 @@ export default function PremierLeaguePage() {
             </thead>
 
             <tbody>
-              {sampleStandings.map((team) => (
-                <tr key={team.code}>
-                  <td className="pl-position">{team.pos}</td>
-                  <td>
-                    <div className="pl-club">
-                      <span className="pl-club-badge">{team.code}</span>
-                      <span>{team.club}</span>
-                    </div>
-                  </td>
-                  <td>{team.p}</td>
-                  <td>{team.w}</td>
-                  <td>{team.d}</td>
-                  <td>{team.l}</td>
-                  <td>{team.gf}</td>
-                  <td>{team.ga}</td>
-                  <td>{team.gf - team.ga}</td>
-                  <td className="pl-points">{team.pts}</td>
+              {footballLoading ? (
+                <tr>
+                  <td colSpan={10}>LOADING LEAGUE STANDINGS...</td>
                 </tr>
-              ))}
+              ) : standings.length ? (
+                standings.map((team) => (
+                  <tr key={team.team.id}>
+                    <td className="pl-position">{team.position}</td>
+
+                    <td>
+                      <div className="pl-club">
+                        {team.team.crest ? (
+                          <img
+                            className="pl-team-crest"
+                            src={team.team.crest}
+                            alt=""
+                            loading="lazy"
+                          />
+                        ) : (
+                          <span className="pl-club-badge">
+                            {team.team.tla ||
+                              team.team.name?.slice(0, 3).toUpperCase()}
+                          </span>
+                        )}
+
+                        <span>{team.team.name}</span>
+                      </div>
+                    </td>
+
+                    <td>{team.playedGames ?? 0}</td>
+                    <td>{team.won ?? 0}</td>
+                    <td>{team.draw ?? 0}</td>
+                    <td>{team.lost ?? 0}</td>
+                    <td>{team.goalsFor ?? 0}</td>
+                    <td>{team.goalsAgainst ?? 0}</td>
+                    <td>{team.goalDifference ?? 0}</td>
+                    <td className="pl-points">{team.points ?? 0}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={10}>
+                    No standings available for this season yet.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
 
         <p className="pl-table-footnote">
-          Illustrative rows only — this is not the official league table.
+          Standings provided by football-data.org. Data refreshes according
+          to the provider and cache settings.
         </p>
       </section>
 
-      <section className="pl-section pl-scorers-section">
+      <section className="pl-section pl-scorers-section" id="pl-matches">
         <div className="pl-section-heading">
           <div>
-            <p className="pl-eyebrow">IN FRONT OF GOAL</p>
-            <h2>TOP <span>SCORERS</span></h2>
+            <p className="pl-eyebrow">THE ACTION</p>
+            <h2>
+              RESULTS <span>& FIXTURES</span>
+            </h2>
           </div>
 
-          <span className="pl-demo-label">DEMO DATA</span>
+          <span className="pl-demo-label">
+            {footballLoading
+              ? "LOADING"
+              : matchesError
+                ? "UNAVAILABLE"
+                : "MATCH DATA"}
+          </span>
         </div>
 
-        <div className="pl-scorers-list">
-          {sampleScorers.map((player, index) => (
-            <div className="pl-scorer" key={player.name}>
-              <span className="pl-scorer-rank">
-                {String(index + 1).padStart(2, "0")}
-              </span>
+        {matchesError && <p className="pl-notice">{matchesError}</p>}
 
-              <div className="pl-scorer-info">
-                <h3>{player.name}</h3>
-                <p>{player.club}</p>
+        {!footballLoading && !matchesError && (
+          <>
+            <div className="pl-match-group">
+              <h3 className="pl-match-group-title">RECENT RESULTS</h3>
+
+              <div className="pl-scorers-list">
+                {finishedMatches.length ? (
+                  finishedMatches.map((match, index) =>
+                    renderMatch(match, index, true)
+                  )
+                ) : (
+                  <p className="pl-news-message">
+                    No completed matches are available.
+                  </p>
+                )}
               </div>
-
-              <span className="pl-scorer-goals">{player.goals}</span>
             </div>
-          ))}
-        </div>
+
+            <div className="pl-match-group">
+              <h3 className="pl-match-group-title">UPCOMING FIXTURES</h3>
+
+              <div className="pl-scorers-list">
+                {upcomingMatches.length ? (
+                  upcomingMatches.map((match, index) =>
+                    renderMatch(match, index, false)
+                  )
+                ) : (
+                  <p className="pl-news-message">
+                    No upcoming fixtures are available.
+                  </p>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+
+        {footballLoading && (
+          <p className="pl-news-message">LOADING RESULTS AND FIXTURES...</p>
+        )}
 
         <p className="pl-table-footnote">
-          Goal totals will appear after the football API is connected.
+          Match dates and scores provided by football-data.org. Times are
+          displayed in your browser's local time zone.
         </p>
       </section>
 
@@ -194,7 +429,9 @@ export default function PremierLeaguePage() {
         <div className="pl-section-heading">
           <div>
             <p className="pl-eyebrow">STRAIGHT FROM THE NEWSROOM</p>
-            <h2>PREMIER LEAGUE <span>NEWS</span></h2>
+            <h2>
+              PREMIER LEAGUE <span>NEWS</span>
+            </h2>
           </div>
 
           <Link href="/news" className="pl-text-link">
@@ -260,12 +497,16 @@ export default function PremierLeaguePage() {
 
       <section className="pl-bottom-banner">
         <p>DRIBBLE. / THE GAME NEVER STOPS.</p>
-        <h2>MORE THAN <span>90 MINUTES.</span></h2>
+        <h2>
+          MORE THAN <span>90 MINUTES.</span>
+        </h2>
         <Link href="/fixtures/premier-league" className="pl-button">
           EXPLORE FIXTURES <span>↗</span>
         </Link>
       </section>
     </main>
   );
-}
+};
+
+export default PremierLeaguePage;
 

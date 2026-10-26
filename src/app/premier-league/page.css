@@ -631,3 +631,117 @@
   }
 }
 
+/* Football-data.org club crests */
+.pl-team-crest {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+/* Results and fixtures */
+.pl-match-group {
+  margin-top: 28px;
+}
+
+.pl-match-group-title {
+  margin: 0 0 14px;
+  color: var(--lime, #b8f56a);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.pl-match-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.pl-match-date {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 105px;
+  font-size: 0.8rem;
+}
+
+.pl-match-date small {
+  color: #8d999f;
+  font-size: 0.63rem;
+  letter-spacing: 0.06em;
+}
+
+.pl-match-teams {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  flex: 1;
+  min-width: 0;
+}
+
+.pl-match-team {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 0.86rem;
+}
+
+.pl-match-team img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.pl-match-team span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pl-match-score {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 54px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.pl-match-score-divider {
+  color: #8d999f;
+}
+
+.pl-match-vs {
+  color: #b8f56a;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+}
+
+@media (max-width: 600px) {
+  .pl-match-row {
+    gap: 10px;
+  }
+
+  .pl-match-date {
+    min-width: 75px;
+    font-size: 0.7rem;
+  }
+
+  .pl-match-team {
+    font-size: 0.75rem;
+  }
+
+  .pl-match-team img {
+    width: 17px;
+    height: 17px;
+  }
+
+  .pl-match-score {
+    min-width: 42px;
+    gap: 4px;
+  }
+}
+
